@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <title>Earth at Night</title>
+
+	<!-- JqueryMobile CSS-->
+        <link rel="stylesheet" href="libs/jquery.mobile-1.2.0.min.css" />
+	<!-- Custom CSS ICONS-->
+	<link rel="stylesheet" href="libs/jqm-icon-pack-3.0.0-fa.css" />
+
+	<!-- Custom CSS -->
+<style>
+
+	#rootpageContent {
+		padding: 0 !important;
+		background-color: black !important;
+	}
+
+	/*#root_header {
+		margin: 0 !important;
+	}*/
+
+	#GPSwrap {
+		position:absolute !important;
+		z-index:9999;
+		padding-top:4px;
+		padding-left:4px;
+	}
+
+	.mapControl i{
+		font-size:2.4em;
+		opacity:0.8;
+	}
+
+	.mapControl {
+		padding-bottom:5px !important;
+	}
+
+	#lightbulbIcon {
+		opacity:0.5;
+	}
+
+/*.ui-page { -webkit-backface-visibility: hidden; } workaround Android http://jquerymobile.com/demos/1.2.0/docs/pages/page-transitions.html*/
+
+#GPSwrap .ui-btn { padding:4px;}
+/*.ui-btn-text {font-size:10px;}*/
+
+input{
+	-webkit-user-modify: read-write-plaintext-only;
+	-webkit-tap-highlight-color: rgba(255,255,255,0);
+}
+
+
+textarea{
+	-webkit-user-modify: read-write-plaintext-only;
+	-webkit-tap-highlight-color: rgba(255,255,255,0);
+}
+
+
+
+</style>
+
+<body>
+	<!-- rootpage -->
+	<div data-role="page" id="rootpage">
+
+		<div data-role="header" id="root_header" >
+			<h1><i class="ui-icon-globe"></i> Earth at night</h1>
+			 <div style="width:98%;padding-left:1%;padding-bottom:8px;">
+				<form id="searchForm">
+					<input id="findLocation" placeholder="Search a location..." name="search" type="search" data-mini="true" data-theme="a">
+				</form>
+			</div>
+		</div><!-- root_header -->
+
+		<div data-role="content" id="rootpageContent">
+			<div id="GPSwrap"><button onclick="getGPSposition()" data-theme="b" data-icon="screenshot" data-inline="true" data-iconpos="notext">GPS</button></div>
+			<div id="map_canvas"></div>
+
+		</div>
+
+		<div data-role="footer" data-id="foo1" data-position="fixed" id="root_footer">
+			<div data-role="navbar">
+				<ul class="mapControl">
+ 
+					<li><button data-corners="false" data-shadow="false" onclick="switchLight()"><i id="lightbulbIcon" class="ui-icon-lightbulb"></i></button></li>
+					<li><button data-corners="false" data-shadow="false" onclick="ZoomIn()"><i class="ui-icon-zoom-in"></i></button></li>
+					<li><button data-corners="false" data-shadow="false" onclick="ZoomOut()"><i class="ui-icon-zoom-out"></i></button></li>
+					<li><button data-corners="false" data-shadow="false" onclick="Share()"><i class="ui-icon-share"></i></button></li>
+				</ul>
+			</div><!-- /navbar -->
+		</div><!-- /footer -->
+	</div><!-- /rootpage -->
+
+	<!-- Start of second page -->
+	<div data-role="page" id="locationinfo" data-theme="a">
+
+		<div data-role="header">
+			<a href="#rootpage" data-icon="back" data-theme="b" data-transition="slide" data-direction="reverse">Back</a>
+			<h1><i class="ui-icon-edit"></i> Additional Information</h1>
+			<button onclick="skipForm()" data-theme="b" data-iconpos="right" data-transition="slide" data-icon="forward">Skip</button>
+		</div>
+
+		<div data-role="content">	
+			<p>Add additional information for this location. None of the fields are mandatory.</p>		
+
+			<div data-role="fieldcontain">
+				<label for="TitleShare">Title:</label>
+				<input type="text" name="TitleShare" id="TitleShare" value="" placeholder="Type a title.." maxlength="70"/>
+			</div>
+
+			<div data-role="fieldcontain">
+				<label for="DescriptionShare">Description:</label>
+				<textarea  rows="4" name="DescriptionShare" id="DescriptionShare"  placeholder="Type a description.." maxlength="256"></textarea>
+			</div>
+
+
+			<div data-role="fieldcontain">
+				<fieldset data-role="controlgroup">
+
+				<legend>Select Link Text:</legend>
+				<input type="checkbox" name="checkbox-1a" id="optionAddress" class="custom" checked/>
+				<label for="optionAddress">Show Address</label>
+
+				<input type="checkbox" name="checkbox-2a" id="optionLatLon" class="custom" checked/>
+				<label for="optionLatLon">Show Location</label>
+
+				</fieldset>
+			</div>
+
+			<fieldset class="ui-grid-a">
+				<div class="ui-block-a"><button onclick="resetForm()"  data-icon="delete" data-theme="d">Reset</button></div>
+				<div class="ui-block-b"><button onclick="saveForm()" data-theme="b" data-icon="arrow-r" data-iconpos="right">Submit</button></div>
+			</fieldset>
+
+		</div><!-- /content -->
+
+	</div><!-- /locationinfo -->
+
+
+	<!-- Start of sharepage page -->
+	<div data-role="page" id="sharepage"  data-theme="a">
+
+		<div data-role="header">
+			<h1><i class="ui-icon-share"></i> Share</h1>
+			<button onclick="MainJS.clearBack()" data-icon="map-marker" data-theme="b" class="ui-btn-right" id="backMap">Map</button>
+		</div>
+
+		<div data-role="content">
+			<label for="shorturl">Your short URL:</label>
+			<input type="text" name="shorturl" id="shorturl" value=""  />
+			<button onclick="openBrowser()" data-icon="globe" data-iconpos="right" rel="external" target="_blank">Open in a Browser</button>
+			<button onclick="sendEmail()" data-icon="envelope-alt" data-iconpos="right">Send Email</button>
+			<button onclick="shareTwitter()" data-icon="twitter" data-iconpos="right" rel="external">Share on Twitter</button>
+			<button onclick="shareFacebook()" data-icon="facebook" data-iconpos="right" data-rel="dialog">Share on Facebook</button>
+
+		</div><!-- /content -->
+
+	</div><!-- sharepage-->
+
+
+	<!-- Start of offline internet page -->
+	<div data-role="page" id="offlinepage"  data-theme="a">
+		<div data-role="header">
+			<h1><i class="ui-icon-warning-sign"></i> You are offline.</h1>
+		</div>
+		<div data-role="content">
+			<h3>No Internet connection found.</h3>
+			<p>Please note that the application requires a carrier data network or Wifi connection to function.</p>
+		</div><!-- /content -->
+	</div><!-- offline internet page -->
+
+
+        <!-- JavaScripts -->
+
+        <script type="text/javascript" src="libs/jquery.min.js"></script>
+        <script type="text/javascript">
+            var jqd = $.Deferred();
+
+            $(document).bind('mobileinit', function () {
+
+		$.mobile.changePage.defaults.changeHash = false;
+                jqd.resolve();
+
+            });
+        </script>
+
+        <script type="text/javascript" src="js/main.js"></script>
+        <script type="text/javascript" src="libs/jquery.mobile-1.2.0.min.js"></script>
+        <script type="text/javascript" src="cordova-2.3.0.js"></script>
+        <script type="text/javascript">
+	var dd = $.Deferred();
+	$.when(dd, jqd).done(doInit);
+
+
+
+	document.addEventListener('deviceready', deviceReady, false);
+	function deviceReady() {
+		dd.resolve();
+
+
+	}
+
+	function doInit() {
+		checkConnection();
+		document.addEventListener("offline", checkConnection, false);
+		document.addEventListener("online", onOnline, false);
+
+	} //end doInit
+
+	function checkConnection() {
+		var networkState = navigator.connection.type;
+		if (networkState == Connection.NONE || networkState == Connection.UNKNOWN) {
+			$.mobile.changePage( "#offlinepage", { transition: "slidedown"/*,changeHash: false*/} );
+		}
+	}
+
+	function onOnline() {
+		/*var networkState = navigator.connection.type;
+		if (networkState != Connection.NONE || networkState != Connection.UNKNOWN) {
+			$.mobile.changePage( "#rootpage", { transition: "slideup"} );
+
+		}*/
+		location.reload();
+	}
+
+
+
+
+	/*rootpage A.K.A map*/
+	function switchLight()	{
+		if(map_switchState==0) {
+			map_switchState = 1;
+			MainJS.swtichmap(1);
+			$("#lightbulbIcon").css("opacity", "1");
+		} else {
+			map_switchState = 0;
+			MainJS.swtichmap(0);
+			$("#lightbulbIcon").css("opacity", "0.5");
+		}
+	}
+
+	function ZoomIn() {
+		var zoomLevel = map.getZoom();
+		if (zoomLevel==20) {
+			alert("Maximum zoom-in reached.")
+		} else {
+			map.setZoom(zoomLevel + 1);
+		}
+	}
+
+	function ZoomOut() {
+
+		var zoomLevel = map.getZoom();
+		if (zoomLevel==2) {
+			alert("Maximum zoom-out reached.")
+		} else {
+			map.setZoom(zoomLevel - 1);
+		}
+	}
+
+	function Share() {
+		if(markersArray.length==0) {
+			alert("You must have a location first.");
+		} else {
+			$.mobile.changePage( "#locationinfo", { transition: "slide"} );
+
+		}
+	}
+
+	$('#searchForm').submit(function() { 
+			MainJS.codeAddress($('#findLocation').val());
+
+
+			return false;
+	 });
+
+	function getGPSposition() {
+			$.mobile.loading( 'show', {
+					text: 'Waiting for GPS',
+					textVisible: true,
+					theme: 'a',
+					textonly: false
+			});
+			var optionsGPS ={/*maximumAge: 3000, timeout: 5000,*/ enableHighAccuracy: true };
+			navigator.geolocation.getCurrentPosition(GPSonSuccess, GPSonError, optionsGPS);
+	}
+
+	function GPSonSuccess(position){
+		$.mobile.loading( 'hide' );
+		LatLonPosition = new google.maps.LatLng(position.coords.latitude,position.coords.longitude);
+		MainJS.codeAddressLatLon(LatLonPosition);
+	} // GPSonSuccess
+
+
+	function GPSonError(error) {
+		$.mobile.loading( 'hide' );
+		alert('Unable to receive location. Check if GPS is enabled.');
+	}// GPSonError
+
+
+	/*locationinfo page*/
+	function resetForm() {
+		$('#TitleShare').val('');
+		$('#DescriptionShare').val('');
+	}
+
+	function resetForm() {
+		$('#TitleShare').val('');
+		$('#DescriptionShare').val('');
+	}
+
+	function saveForm() {
+		MainJS.Save($("#TitleShare").val(), $('#DescriptionShare').val(), ""/*link*/, ""/*anchor*/, $('#optionAddress').is(':checked'), $('#optionLatLon').is(':checked'));
+	}
+
+
+	function skipForm() {
+		MainJS.Save("", "", ""/*link*/, ""/*anchor*/, $('#optionAddress').is(':checked'), $('#optionLatLon').is(':checked'));
+	}
+
+	/*sharepage page*/
+	function openBrowser() {
+		navigator.app.loadUrl(shortURL, {openExternal: true});
+	}
+
+	function sendEmail() {
+		navigator.app.loadUrl("mailto:?subject=Location&body=" + encodeURIComponent(shareText), {openExternal: true});
+	}
+
+	function shareTwitter() {
+		navigator.app.loadUrl("http://twitter.com/share?text=" + encodeURIComponent(shareText), {openExternal: true});
+	}
+
+	function shareFacebook() {
+		navigator.app.loadUrl("http://www.facebook.com/sharer.php?u=" + encodeURIComponent(shortURL) + '&t='+encodeURIComponent(shareText), {openExternal: true});
+	}
+
+
+
+
+
+	/*var bannerH = 0;
+	$("#rootpage").live("pageshow", function() {
+		if(bannerH == 0) {
+			bannerH = 50 * window.devicePixelRatio ;
+			var h_window = $(window).height();
+			var root_footer = $('#root_footer').outerHeight(true);
+			var root_header = $('#root_header').outerHeight(true);
+			var h_map = h_window - bannerH - root_footer - root_header;
+
+			$('#map_canvas').css('height', h_map);
+		}
+
+
+	});*/
+
+$(document).delegate("#rootpage", "pageshow", function() {  
+	setTimeout(function () {
+			google.maps.event.trigger(map, 'resize');
+		}, 600);
+});
+
+
+
+	$(function () {
+	    $(window).bind('resize', function () {
+ 			//var id = $.mobile.activePage[0].id;
+			//if(id == "rootpage") {
+				var h_window = $(window).height();
+				var root_footer = $('#root_footer').outerHeight(true);
+				var root_header = $('#root_header').outerHeight(true);
+				//var h_map = h_window - bannerH - root_footer - root_header;
+				var h_map = h_window - root_footer - root_header;
+				setTimeout(function () {
+					$('#map_canvas').css('height', h_map);
+					$('#rootpageContent').css('height', h_map);
+					google.maps.event.trigger(map, 'resize');
+
+				}, 500);
+			//}
+
+	    }).trigger('resize');
+	});
+
+
+
+	//$(window).bind('orientationchange',function(){
+	//	google.maps.event.trigger(map, 'resize');
+	//});
+
+
+
+	$(document).delegate("#rootpage", "pageinit", function() {  
+
+		window.onload = MainJS.loadmap;
+
+	}); //function maptiler.setOpacity(0.4); - add latter?
+
+
+
+	$("#sharepage").live("pageshow", function() {
+		$('#shorturl').val(shortURL);
+	});
+
+
+	</script>
+
+</body>
+</html>
+
+
