@@ -1,4 +1,4 @@
-![Earth at Night map baner](https://raw.githubusercontent.com/HristoTomov/EarthAtNightApp/master/GraphicalAssets/bigwebeanWEB.png)
+![Earth at Night map banner](https://raw.githubusercontent.com/HristoTomov/EarthAtNightApp/master/GraphicalAssets/bigwebeanWEB.png)
 
 # Earth at Night map app
 
